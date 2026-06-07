@@ -1,0 +1,22 @@
+{
+  "name": "md2slides",
+  "version": "1.0.0",
+  "description": "",
+  "bin": {
+    "md2slides": "./md2slides.js"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "commander": "^15.0.0",
+    "express": "^5.2.1",
+    "figlet": "^1.11.0",
+    "open": "^11.0.0",
+    "path": "^0.12.7"
+  }
+}

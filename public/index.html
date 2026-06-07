@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>md2slides — Markdown Presentation Studio</title>
+     <link rel="icon" href="/favicon.ico">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Fonts & Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <!-- Marked.js for Markdown Parsing -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* Slide Container - Container Queries for Responsive Text Scaling */
+        .slide-container {
+            aspect-ratio: 16 / 9;
+            width: 100%;
+            background: white;
+            position: relative;
+            overflow: hidden;
+            container-type: inline-size;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Slide Typography Content (Scales perfectly based on container width) */
+        .slide-content {
+            padding: 6cqw;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            color: #1e293b;
+        }
+        .slide-content h1 { font-size: 5cqw; font-weight: 800; margin-bottom: 2cqw; line-height: 1.1; color: #0f172a; }
+        .slide-content h2 { font-size: 3.5cqw; font-weight: 700; margin-bottom: 1.5cqw; line-height: 1.2; color: #1e293b; }
+        .slide-content h3 { font-size: 2.5cqw; font-weight: 600; margin-bottom: 1cqw; }
+        .slide-content p { font-size: 1.8cqw; line-height: 1.6; margin-bottom: 1.5cqw; }
+        
+        .slide-content ul { list-style-type: none; margin-bottom: 1.5cqw; }
+        .slide-content ul li { font-size: 1.8cqw; position: relative; padding-left: 2.5cqw; margin-bottom: 0.8cqw; }
+        .slide-content ul li::before { content: "•"; position: absolute; left: 0.8cqw; color: #4f46e5; font-weight: bold; }
+        
+        .slide-content pre { background: #1e293b; color: #f8fafc; padding: 1.5cqw; border-radius: 0.5cqw; font-family: 'JetBrains Mono', monospace; font-size: 1.4cqw; margin-bottom: 1.5cqw; overflow-x: auto; }
+        .slide-content code { font-family: 'JetBrains Mono', monospace; font-size: 0.9em; background: #f1f5f9; padding: 0.2cqw 0.4cqw; border-radius: 4px; color: #ef4444; }
+        
+        .slide-content img { max-width: 100%; max-height: 45cqw; object-fit: contain; border-radius: 8px; margin: 1cqw auto; display: block; }
+        
+        .slide-content table { width: 100%; border-collapse: collapse; margin: 1.5cqw 0; font-size: 1.5cqw; }
+        .slide-content th { font-weight: 600; padding: 1cqw; border-bottom: 2px solid #cbd5e1; text-align: left; }
+        .slide-content td { padding: 1cqw; border-bottom: 1px solid #e2e8f0; }
+        .slide-content blockquote { border-left: 0.4cqw solid #4f46e5; padding: 0.5cqw 1.5cqw; font-style: italic; background: #f8fafc; color: #475569; }
+
+        /* Fullscreen Reset overrides */
+        #fullscreen-container {
+            background-color: #000;
+        }
+        #fullscreen-container .slide-container {
+            max-height: 100vh;
+            max-width: 100vw;
+            box-shadow: none;
+            border-radius: 0;
+        }
+
+        /* Editor textarea reset */
+        #md-editor {
+            tab-size: 4;
+        }
+
+        /* Dark Mode Slide Overrides */
+        .dark .slide-container { background: #0f172a; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5); }
+        .dark .slide-content { color: #f8fafc; }
+        .dark .slide-content h1 { color: #f8fafc; }
+        .dark .slide-content h2 { color: #e2e8f0; }
+        .dark .slide-content h3 { color: #cbd5e1; }
+        .dark .slide-content td { border-bottom: 1px solid #334155; }
+        .dark .slide-content th { border-bottom: 2px solid #475569; }
+        .dark .slide-content code { background: #1e293b; color: #f87171; }
+        .dark .slide-content blockquote { background: #1e293b; color: #94a3b8; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 h-screen overflow-hidden flex flex-col transition-colors duration-200">
+
+    <!-- Global Header -->
+    <nav class="h-14 border-b border-slate-200 dark:border-slate-800 px-6 flex items-center justify-between bg-white dark:bg-slate-900 shrink-0 transition-colors z-20">
+        <div class="flex items-center gap-3">
+            <div class="h-8 w-8 bg-indigo-600 text-white rounded-lg flex items-center justify-center shadow-sm">
+                <i class="fa-solid fa-file-powerpoint"></i>
+            </div>
+            <span class="text-xl font-bold tracking-tight text-slate-900 dark:text-white">md2slides</span>
+        </div>
+        <div class="flex items-center gap-3 text-slate-600 dark:text-slate-300">
+            <button id="btn-info" class="h-8 w-8 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center transition" title="About md2slides">
+                <i class="fa-solid fa-circle-info text-lg"></i>
+            </button>
+            <button id="btn-theme-toggle" class="h-8 w-8 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center transition" title="Toggle Theme">
+                <i class="fa-solid fa-moon dark:hidden text-lg"></i>
+                <i class="fa-solid fa-sun hidden dark:block text-lg"></i>
+            </button>
+        </div>
+    </nav>
+
+    <div id="page-landing" class="h-full w-full overflow-y-auto flex flex-col items-center py-12 px-6">
+        
+        <!-- Branding -->
+        <div class="text-center mb-12">
+            <div class="h-16 w-16 bg-indigo-600 text-white rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4 shadow-lg shadow-indigo-600/30">
+                <i class="fa-solid fa-file-powerpoint"></i>
+            </div>
+            <h1 class="text-4xl font-bold tracking-tight text-slate-900 dark:text-white mb-2">md2slides</h1>
+            <p class="text-slate-500 dark:text-slate-400">Your Markdown to Presentation Studio</p>
+        </div>
+
+        <div class="max-w-4xl w-full grid grid-cols-1 md:grid-cols-5 gap-8">
+            
+            <!-- Left Column: Open New File Action -->
+            <div class="md:col-span-2 flex flex-col">
+                <h2 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">Start New</h2>
+                
+                <label for="file-upload" class="flex-1 border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-indigo-500 dark:hover:border-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors duration-200 rounded-2xl flex flex-col items-center justify-center p-8 cursor-pointer group bg-white dark:bg-slate-900 shadow-sm">
+                    <div class="h-14 w-14 bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 rounded-full flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                    </div>
+                    <span class="text-lg font-semibold text-slate-700 dark:text-slate-200 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 mb-1">Open .md File</span>
+                    <span class="text-sm text-slate-400 text-center">Click to browse your computer<br>or drop file here</span>
+                    <input id="file-upload" type="file" accept=".md,.markdown,.txt" class="hidden" />
+                </label>
+            </div>
+
+            <!-- Right Column: Recent Files List -->
+            <div class="md:col-span-3 flex flex-col">
+                <h2 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">Recent Presentations</h2>
+                
+                <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden flex-1 flex flex-col transition-colors">
+                    <ul id="recent-files-list" class="divide-y divide-slate-100 dark:divide-slate-800 overflow-y-auto max-h-[400px]">
+                        <!-- Populated by JavaScript -->
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="page-workspace" class="h-full w-full flex flex-col hidden bg-white dark:bg-slate-950 transition-colors">
+        
+        <!-- Header Navbar -->
+        <header class="h-16 border-b border-slate-200 dark:border-slate-800 px-4 flex items-center justify-between bg-slate-50 dark:bg-slate-900 shrink-0 transition-colors">
+            <div class="flex items-center gap-4">
+                <button id="btn-back-home" class="h-9 w-9 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center transition" title="Back to Home">
+                    <i class="fa-solid fa-arrow-left"></i>
+                </button>
+                <div class="flex flex-col justify-center">
+                    <div class="flex items-center gap-2">
+                        <span id="current-file-name" class="font-semibold text-sm text-slate-800 dark:text-slate-200">Presentation.md</span>
+                        <span id="file-status-badge" class="hidden text-[9px] px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-400 font-bold uppercase tracking-wider">Unsaved</span>
+                    </div>
+                    <div class="flex items-center gap-3 mt-1">
+                        <!-- Save Button -->
+                        <button id="btn-save-file" class="text-[11px] font-medium flex items-center gap-1.5 text-slate-500 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-400 disabled:opacity-40 disabled:cursor-not-allowed transition" disabled>
+                            <i class="fa-solid fa-floppy-disk"></i> Save
+                        </button>
+                        <div class="w-px h-3 bg-slate-300 dark:bg-slate-700"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <span id="header-slide-indicator" class="text-xs font-medium bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-2 py-1 rounded">Slide 1 / 1</span>
+                
+                <button id="btn-present" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium px-4 py-1.5 rounded-lg flex items-center gap-2 shadow-sm transition">
+                    <i class="fa-solid fa-play"></i> Present
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Split View -->
+        <main class="flex-1 flex overflow-hidden">
+            
+            <!-- Editor Pane (Left) -->
+            <div class="w-1/2 flex flex-col border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 transition-colors">
+                <div class="h-10 bg-slate-100 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800 flex items-center px-4 shrink-0 text-xs font-semibold text-slate-500 dark:text-slate-400">
+                    <i class="fa-brands fa-markdown mr-2"></i> Editor (Use <code class="bg-slate-200 dark:bg-slate-700 px-1 mx-1 rounded text-slate-700 dark:text-slate-300">---</code> to split slides)
+                </div>
+                <textarea id="md-editor" class="flex-1 w-full p-6 resize-none outline-none font-mono text-sm text-slate-700 dark:text-slate-300 leading-relaxed bg-white dark:bg-slate-900 transition-colors" placeholder="Type your markdown here..."></textarea>
+            </div>
+
+            <!-- Preview Pane (Right) -->
+            <div class="w-1/2 flex flex-col bg-slate-100 dark:bg-slate-950 relative transition-colors">
+                <div class="h-10 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-4 shrink-0 text-xs font-semibold text-slate-500 dark:text-slate-400">
+                    <div><i class="fa-solid fa-display mr-2"></i> Live Preview</div>
+                </div>
+                
+                <!-- Slide Preview Canvas Area -->
+                <div class="flex-1 overflow-auto flex items-center justify-center p-8">
+                    <!-- The scaling 16:9 box -->
+                    <div id="preview-slide-container" class="slide-container rounded-xl transition-colors">
+                        <div id="preview-slide-content" class="slide-content">
+                            <!-- Rendered content goes here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Slide Navigation Footer -->
+                <div class="h-12 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex items-center justify-center gap-4 shrink-0 transition-colors">
+                    <button id="btn-prev-slide" class="h-8 w-8 rounded hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
+                        <i class="fa-solid fa-chevron-left"></i>
+                    </button>
+                    <span id="footer-slide-indicator" class="text-sm font-medium text-slate-600 dark:text-slate-300 font-mono">1 / 1</span>
+                    <button id="btn-next-slide" class="h-8 w-8 rounded hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="fullscreen-container" class="fixed inset-0 z-50 hidden flex flex-col justify-center items-center">
+        
+        <!-- Esc Tooltip -->
+        <div id="esc-tooltip" class="absolute top-6 left-1/2 transform -translate-x-1/2 bg-black/60 backdrop-blur text-white text-xs px-4 py-2 rounded-full opacity-100 transition-opacity duration-1000 z-50 pointer-events-none">
+            Press <kbd class="px-1.5 py-0.5 bg-white/20 rounded font-mono">Esc</kbd> to exit fullscreen
+        </div>
+
+        <!-- Fullscreen Slide Render -->
+        <div id="fs-slide-container" class="slide-container w-full h-full flex items-center justify-center transition-opacity duration-300">
+            <div id="fs-slide-content" class="slide-content w-full h-full max-w-7xl mx-auto">
+                <!-- Content injected here -->
+            </div>
+        </div>
+
+        <!-- Hidden but clickable nav zones -->
+        <div id="fs-zone-left" class="absolute left-0 top-0 bottom-0 w-1/4 cursor-w-resize z-40"></div>
+        <div id="fs-zone-right" class="absolute right-0 top-0 bottom-0 w-1/4 cursor-e-resize z-40"></div>
+
+        <!-- Subtle bottom progress bar -->
+        <div id="fs-progress" class="absolute bottom-0 left-0 h-1 bg-indigo-600 transition-all duration-300 z-50" style="width: 0%;"></div>
+    </div>
+
+    <!-- Custom Modal/Toast container -->
+    <div id="notification-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- Info Modal -->
+    <div id="info-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex justify-center items-center opacity-0 transition-opacity duration-300">
+        <div class="bg-white dark:bg-slate-900 w-full max-w-md rounded-2xl shadow-xl p-6 transform scale-95 transition-transform duration-300 border border-slate-200 dark:border-slate-800">
+            <div class="flex justify-between items-start mb-4">
+                <div class="flex items-center gap-3">
+                    <div class="h-10 w-10 bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 rounded-xl flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-file-powerpoint"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-900 dark:text-white">md2slides</h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Version 1.0.0</p>
+                    </div>
+                </div>
+                <button id="btn-close-info" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+            <div class="text-sm text-slate-600 dark:text-slate-300 space-y-3">
+                <p><strong>md2slides</strong> is a lightning-fast Markdown presentation studio that runs entirely in your browser.</p>
+                <ul class="list-disc pl-5 space-y-1">
+                    <li>Write standard Markdown on the left.</li>
+                    <li>Preview auto-scaling slides on the right.</li>
+                    <li>Separate slides using <code>---</code> on a new line.</li>
+                    <li>Click <strong>Present</strong> to go fullscreen.</li>
+                </ul>
+                <p class="text-xs text-slate-400 pt-2 border-t border-slate-100 dark:border-slate-800">All data is temporarily stored in your local browser session.</p>
+            </div>
+            <div class="mt-6 flex justify-end">
+                <button id="btn-close-info-bottom" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-sm font-semibold rounded-lg transition">Got it</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. State Management & Mock Data ---
+        
+        // Simulating persistent memory for the session
+        const DUMMY_MARKDOWN = `# Welcome to md2slides 🚀
+Create beautiful presentations using just text!
+
+* Left side: Type Markdown.
+* Right side: See the Live Preview.
+* Separate slides using \`---\` on a new line.
+
+---
+
+## Awesome Features 🌟
+
+1. **Auto-Scaling Typography**: Text magically scales to fit the 16:9 canvas!
+2. **Standard Markdown**: Supports lists, bold, *italics*, and blockquotes.
+3. **Images**: You can embed web images easily.
+4. **Code Blocks**: Formatted beautifully.
+
+\`\`\`javascript
+function presentAwesomeSlides() {
+    console.log("It's showtime!");
+}
+\`\`\`
+
+---
+
+## Tables Support 📊
+
+| Feature | md2slides | PowerPoint |
+| :--- | :--- | :--- |
+| **Fast** | ✅ Yes | ❌ No |
+| **Text-Based** | ✅ Yes | ❌ No |
+| **Exportable** | ✅ Yes | ❌ No |
+
+---
+
+# Ready?
+Click **"Present"** in the top right corner! 🎉`;
+
+        let recentFiles = [
+            {
+                id: 'demo-123',
+                name: 'Getting_Started.md',
+                path: 'md2slides/templates/',
+                lastOpened: Date.now() - (1000 * 60 * 60 * 48), // 2 days ago
+                content: DUMMY_MARKDOWN
+            }
+        ];
+
+        let currentActiveFile = null;
+        let parsedSlides = [];
+        let currentSlideIndex = 0;
+        let lastSavedContent = ''; // Tracks the last saved state
+
+        // --- 2. DOM Elements ---
+        
+        // Pages
+        const pageLanding = document.getElementById('page-landing');
+        const pageWorkspace = document.getElementById('page-workspace');
+        const fullscreenContainer = document.getElementById('fullscreen-container');
+
+        // Landing Elements
+        const recentFilesList = document.getElementById('recent-files-list');
+        const fileUploadInput = document.getElementById('file-upload');
+
+        // Workspace Elements
+        const mdEditor = document.getElementById('md-editor');
+        const previewSlideContent = document.getElementById('preview-slide-content');
+        const currentFileNameDisplay = document.getElementById('current-file-name');
+        
+        // Workspace Toolbar
+        const btnSaveFile = document.getElementById('btn-save-file');
+        const fileStatusBadge = document.getElementById('file-status-badge');
+        
+        // Navigation & Buttons
+        const btnBackHome = document.getElementById('btn-back-home');
+        const btnPresent = document.getElementById('btn-present');
+        const btnPrevSlide = document.getElementById('btn-prev-slide');
+        const btnNextSlide = document.getElementById('btn-next-slide');
+        
+        // Indicators
+        const headerSlideIndicator = document.getElementById('header-slide-indicator');
+        const footerSlideIndicator = document.getElementById('footer-slide-indicator');
+
+        // Fullscreen Elements
+        const fsSlideContent = document.getElementById('fs-slide-content');
+        const fsZoneLeft = document.getElementById('fs-zone-left');
+        const fsZoneRight = document.getElementById('fs-zone-right');
+        const fsProgress = document.getElementById('fs-progress');
+        const escTooltip = document.getElementById('esc-tooltip');
+
+        // Header additions
+        const btnThemeToggle = document.getElementById('btn-theme-toggle');
+        const btnInfo = document.getElementById('btn-info');
+        const infoModal = document.getElementById('info-modal');
+        const btnCloseInfo = document.getElementById('btn-close-info');
+        const btnCloseInfoBottom = document.getElementById('btn-close-info-bottom');
+
+        // --- 3. Initialization & Event Listeners ---
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderRecentFilesList();
+            setupEventListeners();
+        });
+
+        function setupEventListeners() {
+            // Landing Page Interactions
+            fileUploadInput.addEventListener('change', handleFileUpload);
+            
+            // Workspace Interactions
+            btnBackHome.addEventListener('click', closeWorkspace);
+            mdEditor.addEventListener('input', handleEditorInput);
+            
+            // Toolbar Actions
+            btnSaveFile.addEventListener('click', saveActiveFile);
+            
+            // Slide Navigation
+            btnPrevSlide.addEventListener('click', () => navigateSlide(-1));
+            btnNextSlide.addEventListener('click', () => navigateSlide(1));
+            
+            // Fullscreen Triggers
+            btnPresent.addEventListener('click', openFullscreen);
+            fsZoneLeft.addEventListener('click', () => navigateSlide(-1));
+            fsZoneRight.addEventListener('click', () => navigateSlide(1));
+            
+            // Header Listeners
+            btnThemeToggle.addEventListener('click', toggleTheme);
+            btnInfo.addEventListener('click', openInfoModal);
+            btnCloseInfo.addEventListener('click', closeInfoModal);
+            btnCloseInfoBottom.addEventListener('click', closeInfoModal);
+
+            // Keyboard Listeners
+            document.addEventListener('keydown', handleKeydown);
+        }
+
+        // --- 4. Logic Functions ---
+
+        // Time formatter logic (e.g. "2 days ago")
+        function getRelativeTimeString(timestamp) {
+            const rtf = new Intl.RelativeTimeFormat('en', { numeric: 'auto' });
+            const daysDifference = Math.round((timestamp - Date.now()) / (1000 * 60 * 60 * 24));
+            
+            if (daysDifference === 0) {
+                const hoursDiff = Math.round((timestamp - Date.now()) / (1000 * 60 * 60));
+                if (hoursDiff === 0) {
+                    const minsDiff = Math.round((timestamp - Date.now()) / (1000 * 60));
+                    if (minsDiff === 0) return 'Just now';
+                    return rtf.format(minsDiff, 'minute');
+                }
+                return rtf.format(hoursDiff, 'hour');
+            }
+            return rtf.format(daysDifference, 'day');
+        }
+
+        // Populates Landing Page List
+        function renderRecentFilesList() {
+            recentFilesList.innerHTML = '';
+            
+            // Sort by most recent
+            recentFiles.sort((a, b) => b.lastOpened - a.lastOpened);
+
+            if (recentFiles.length === 0) {
+                recentFilesList.innerHTML = `<li class="p-8 text-center text-slate-400 text-sm">No recent files found. Open a new file to get started!</li>`;
+                return;
+            }
+
+            recentFiles.forEach(file => {
+                const li = document.createElement('li');
+                li.className = 'group flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer transition-colors';
+                li.innerHTML = `
+                    <div class="flex items-center gap-4">
+                        <div class="h-10 w-10 rounded bg-indigo-50 dark:bg-indigo-900/30 text-indigo-500 dark:text-indigo-400 flex items-center justify-center text-lg transition-colors">
+                            <i class="fa-brands fa-markdown"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">${file.name}</h3>
+                            <p class="text-[11px] font-mono text-slate-400 dark:text-slate-500">${file.path}${file.name}</p>
+                        </div>
+                    </div>
+                    <div class="text-xs text-slate-400 dark:text-slate-500 font-medium whitespace-nowrap">
+                        ${getRelativeTimeString(file.lastOpened)}
+                    </div>
+                `;
+                
+                // Click to open
+                li.addEventListener('click', () => {
+                    file.lastOpened = Date.now(); // Update timestamp
+                    openWorkspace(file);
+                });
+                
+                recentFilesList.appendChild(li);
+            });
+        }
+
+        // Handles `<input type="file">`
+        function handleFileUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const newFileRecord = {
+                    id: 'file-' + Date.now(),
+                    name: file.name,
+                    path: file.webkitRelativePath || 'local/uploads/',
+                    filePath: file.webkitRelativePath || file.name,
+                    lastOpened: Date.now(),
+                    content: event.target.result,
+                    isLocalFile: true
+                };
+                
+                // Add to our session "memory" recent list
+                recentFiles.unshift(newFileRecord);
+                
+                openWorkspace(newFileRecord);
+                
+                // Reset input so the same file can be uploaded again if needed
+                fileUploadInput.value = ''; 
+            };
+            reader.readAsText(file);
+        }
+
+        // Transition: Landing -> Workspace
+        function openWorkspace(fileRecord) {
+            currentActiveFile = fileRecord;
+            lastSavedContent = currentActiveFile.content;
+            
+            // Set UI details
+            currentFileNameDisplay.textContent = currentActiveFile.name;
+            mdEditor.value = currentActiveFile.content;
+            
+            // Parse & Render
+            processMarkdown();
+            currentSlideIndex = 0;
+            renderCurrentSlide();
+            checkUnsavedChanges();
+
+            // Toggle Views
+            pageLanding.classList.add('hidden');
+            pageWorkspace.classList.remove('hidden');
+            
+            showToast(`Opened ${currentActiveFile.name}`);
+        }
+
+        // Transition: Workspace -> Landing
+        function closeWorkspace() {
+            // Save latest edits to session memory before closing
+            if (currentActiveFile) {
+                currentActiveFile.content = mdEditor.value;
+                currentActiveFile.lastOpened = Date.now();
+                
+                // Find and update in array
+                const index = recentFiles.findIndex(f => f.id === currentActiveFile.id);
+                if (index !== -1) {
+                    recentFiles[index] = currentActiveFile;
+                }
+            }
+
+            // Toggle Views
+            pageWorkspace.classList.add('hidden');
+            pageLanding.classList.remove('hidden');
+            
+            // Re-render updated list
+            renderRecentFilesList();
+        }
+
+        // Editor typing event
+        function handleEditorInput() {
+            checkUnsavedChanges();
+            processMarkdown();
+            renderCurrentSlide();
+        }
+
+        // Compare editor vs saved state
+        function checkUnsavedChanges() {
+            const hasChanges = mdEditor.value !== lastSavedContent;
+            
+            if (hasChanges) {
+                btnSaveFile.disabled = false;
+                fileStatusBadge.classList.remove('hidden');
+            } else {
+                btnSaveFile.disabled = true;
+                fileStatusBadge.classList.add('hidden');
+            }
+        }
+
+        // Express Backend Actions
+        async function saveActiveFile() {
+            if (btnSaveFile.disabled || !currentActiveFile) return;
+
+            // UI Feedback
+            const originalIcon = btnSaveFile.innerHTML;
+            btnSaveFile.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...';
+            btnSaveFile.disabled = true;
+
+            try {
+                const response = await fetch('/api/save-file', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        path: currentActiveFile.filePath || currentActiveFile.path + currentActiveFile.name,
+                        name: currentActiveFile.name,
+                        content: mdEditor.value
+                    })
+                });
+                
+                if (!response.ok) throw new Error('Network response was not ok');
+                
+                // Success
+                lastSavedContent = mdEditor.value;
+                currentActiveFile.content = lastSavedContent;
+                checkUnsavedChanges();
+                showToast('File saved successfully');
+
+            } catch (error) {
+                console.error('Error saving file:', error);
+                showToast('Failed to save file');
+                checkUnsavedChanges(); // Re-enable button on failure
+            } finally {
+                btnSaveFile.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Save';
+            }
+        }
+
+        // Split markdown text by `---` and prepare HTML array
+        function processMarkdown() {
+            const rawText = mdEditor.value;
+            const slideTexts = rawText.split(/\r?\n---\r?\n/);
+            
+            parsedSlides = slideTexts.map(text => marked.parse(text.trim()));
+            
+            // Clamp slide index if user deleted slides
+            if (currentSlideIndex >= parsedSlides.length) {
+                currentSlideIndex = parsedSlides.length - 1;
+            }
+            if (currentSlideIndex < 0) currentSlideIndex = 0;
+        }
+
+        // Draw the slide HTML into the preview container
+        function renderCurrentSlide() {
+            if (parsedSlides.length === 0) {
+                previewSlideContent.innerHTML = `<div class="text-slate-400 text-center italic">Empty slide</div>`;
+                updateNavigationUI();
+                return;
+            }
+
+            const rawHtml = parsedSlides[currentSlideIndex];
+            
+            // Add layout logic for Title-only slides vs content slides
+            const isTitleOnly = (rawHtml.match(/<h[1-6]/g) !== null) && 
+                                (rawHtml.match(/<p>|<ul|<ol|<table|<pre/g) === null);
+
+            let flexClass = 'justify-start items-start text-left';
+            if (isTitleOnly) {
+                flexClass = 'justify-center items-center text-center';
+            }
+
+            // Inject HTML and layout classes
+            const innerMarkup = `<div class="w-full flex flex-col h-full ${flexClass}">${rawHtml}</div>`;
+            
+            // Update Preview Pane
+            previewSlideContent.innerHTML = innerMarkup;
+            
+            // Update Fullscreen Pane (if active)
+            if (!fullscreenContainer.classList.contains('hidden')) {
+                fsSlideContent.innerHTML = innerMarkup;
+            }
+
+            updateNavigationUI();
+        }
+
+        // UI Updates for Buttons and Counters
+        function updateNavigationUI() {
+            const total = Math.max(1, parsedSlides.length);
+            const current = currentSlideIndex + 1;
+            const text = `${current} / ${total}`;
+            
+            headerSlideIndicator.textContent = `Slide ${text}`;
+            footerSlideIndicator.textContent = text;
+            
+            // Button States
+            btnPrevSlide.disabled = currentSlideIndex === 0;
+            btnNextSlide.disabled = currentSlideIndex === parsedSlides.length - 1;
+
+            // Fullscreen Progress Bar
+            if (!fullscreenContainer.classList.contains('hidden')) {
+                fsProgress.style.width = `${(current / total) * 100}%`;
+            }
+        }
+
+        // Arrow controls logic
+        function navigateSlide(direction) {
+            const newIndex = currentSlideIndex + direction;
+            if (newIndex >= 0 && newIndex < parsedSlides.length) {
+                currentSlideIndex = newIndex;
+                renderCurrentSlide();
+            }
+        }
+
+        // --- 5. Fullscreen System ---
+        function openFullscreen() {
+            if (parsedSlides.length === 0) return;
+            
+            fullscreenContainer.classList.remove('hidden');
+            
+            // Browser API request
+            const elem = document.documentElement;
+            if (elem.requestFullscreen) {
+                elem.requestFullscreen();
+            } else if (elem.webkitRequestFullscreen) {
+                elem.webkitRequestFullscreen();
+            }
+
+            renderCurrentSlide(); // Force render into FS element
+            
+            // Tooltip animation
+            escTooltip.classList.remove('opacity-0');
+            setTimeout(() => {
+                escTooltip.classList.add('opacity-0');
+            }, 3000);
+        }
+
+        function closeFullscreen() {
+            fullscreenContainer.classList.add('hidden');
+            if (document.exitFullscreen) {
+                document.exitFullscreen().catch(()=>{});
+            }
+        }
+
+        // Detect Native Escape key exiting fullscreen
+        document.addEventListener('fullscreenchange', () => {
+            if (!document.fullscreenElement) {
+                fullscreenContainer.classList.add('hidden');
+            }
+        });
+
+        // Global Keyboard mappings
+        function handleKeydown(e) {
+            // Save Shortcut (Ctrl+S or Cmd+S)
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+                e.preventDefault();
+                saveActiveFile();
+                return;
+            }
+
+            // Ignore navigation if typing inside the editor
+            if (document.activeElement === mdEditor) return;
+
+            if (e.key === 'ArrowRight' || e.key === ' ') {
+                e.preventDefault();
+                navigateSlide(1);
+            } else if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                navigateSlide(-1);
+            } else if (e.key === 'Escape') {
+                if (!fullscreenContainer.classList.contains('hidden')) {
+                    closeFullscreen();
+                }
+                if (!infoModal.classList.contains('hidden')) {
+                    closeInfoModal();
+                }
+            }
+        }
+
+        // --- 6. Header Logic (Theme & Info) ---
+        function toggleTheme() {
+            if (document.documentElement.classList.contains('dark')) {
+                document.documentElement.classList.remove('dark');
+                localStorage.theme = 'light';
+            } else {
+                document.documentElement.classList.add('dark');
+                localStorage.theme = 'dark';
+            }
+        }
+
+        // Check local storage on load
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+
+        function openInfoModal() {
+            infoModal.classList.remove('hidden');
+            // Trigger reflow for animation
+            void infoModal.offsetWidth;
+            infoModal.classList.remove('opacity-0');
+            infoModal.querySelector('div').classList.remove('scale-95');
+        }
+
+        function closeInfoModal() {
+            infoModal.classList.add('opacity-0');
+            infoModal.querySelector('div').classList.add('scale-95');
+            setTimeout(() => {
+                infoModal.classList.add('hidden');
+            }, 300);
+        }
+
+        // --- 7. Utilities ---
+        function showToast(message) {
+            const container = document.getElementById('notification-container');
+            const toast = document.createElement('div');
+            toast.className = `bg-slate-800 text-white px-4 py-2 rounded shadow-lg text-sm transition-all transform translate-y-10 opacity-0 duration-300`;
+            toast.textContent = message;
+            
+            container.appendChild(toast);
+            
+            // Animate in
+            setTimeout(() => {
+                toast.classList.remove('translate-y-10', 'opacity-0');
+            }, 10);
+            
+            // Animate out
+            setTimeout(() => {
+                toast.classList.add('translate-y-10', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
