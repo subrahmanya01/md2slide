@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>md2slides — Markdown Presentation Studio</title>
+    <title>md2slide — Markdown Presentation Studio</title>
      <link rel="icon" href="/favicon.ico">
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -112,10 +112,10 @@
             <div class="h-8 w-8 bg-indigo-600 text-white rounded-lg flex items-center justify-center shadow-sm">
                 <i class="fa-solid fa-file-powerpoint"></i>
             </div>
-            <span class="text-xl font-bold tracking-tight text-slate-900 dark:text-white">md2slides</span>
+            <span class="text-xl font-bold tracking-tight text-slate-900 dark:text-white">md2slide</span>
         </div>
         <div class="flex items-center gap-3 text-slate-600 dark:text-slate-300">
-            <button id="btn-info" class="h-8 w-8 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center transition" title="About md2slides">
+            <button id="btn-info" class="h-8 w-8 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center transition" title="About md2slide">
                 <i class="fa-solid fa-circle-info text-lg"></i>
             </button>
             <button id="btn-theme-toggle" class="h-8 w-8 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center transition" title="Toggle Theme">
@@ -132,7 +132,7 @@
             <div class="h-16 w-16 bg-indigo-600 text-white rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4 shadow-lg shadow-indigo-600/30">
                 <i class="fa-solid fa-file-powerpoint"></i>
             </div>
-            <h1 class="text-4xl font-bold tracking-tight text-slate-900 dark:text-white mb-2">md2slides</h1>
+            <h1 class="text-4xl font-bold tracking-tight text-slate-900 dark:text-white mb-2">md2slide</h1>
             <p class="text-slate-500 dark:text-slate-400">Your Markdown to Presentation Studio</p>
         </div>
 
@@ -272,7 +272,7 @@
                         <i class="fa-solid fa-file-powerpoint"></i>
                     </div>
                     <div>
-                        <h3 class="text-lg font-bold text-slate-900 dark:text-white">md2slides</h3>
+                        <h3 class="text-lg font-bold text-slate-900 dark:text-white">md2slide</h3>
                         <p class="text-xs text-slate-500 dark:text-slate-400">Version 1.0.0</p>
                     </div>
                 </div>
@@ -281,7 +281,7 @@
                 </button>
             </div>
             <div class="text-sm text-slate-600 dark:text-slate-300 space-y-3">
-                <p><strong>md2slides</strong> is a lightning-fast Markdown presentation studio that runs entirely in your browser.</p>
+                <p><strong>md2slide</strong> is a lightning-fast Markdown presentation studio that runs entirely in your browser.</p>
                 <ul class="list-disc pl-5 space-y-1">
                     <li>Write standard Markdown on the left.</li>
                     <li>Preview auto-scaling slides on the right.</li>
@@ -300,7 +300,7 @@
         // --- 1. State Management & Mock Data ---
         
         // Simulating persistent memory for the session
-        const DUMMY_MARKDOWN = `# Welcome to md2slides 🚀
+        const DUMMY_MARKDOWN = `# Welcome to md2slide 🚀
 Create beautiful presentations using just text!
 
 * Left side: Type Markdown.
@@ -326,7 +326,7 @@ function presentAwesomeSlides() {
 
 ## Tables Support 📊
 
-| Feature | md2slides | PowerPoint |
+| Feature | md2slide | PowerPoint |
 | :--- | :--- | :--- |
 | **Fast** | ✅ Yes | ❌ No |
 | **Text-Based** | ✅ Yes | ❌ No |
@@ -341,7 +341,7 @@ Click **"Present"** in the top right corner! 🎉`;
             {
                 id: 'demo-123',
                 name: 'Getting_Started.md',
-                path: 'md2slides/templates/',
+                path: 'md2slide/templates/',
                 lastOpened: Date.now() - (1000 * 60 * 60 * 48), // 2 days ago
                 content: DUMMY_MARKDOWN
             }

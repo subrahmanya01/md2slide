@@ -1,6 +1,6 @@
-# md2slides
+# md2slide
 
-`md2slides` is a lightweight CLI tool that transforms Markdown files into beautiful presentation slides.
+`md2slide` is a lightweight CLI tool that transforms Markdown files into beautiful presentation slides.
 
 Write your content in Markdown and instantly preview it as an interactive slide deck in the browser.
 
@@ -15,7 +15,7 @@ Write your content in Markdown and instantly preview it as an interactive slide 
 ## Installation
 
 ```bash
-npm install -g md2slides
+npm install -g md2slide
 ```
 
 ## Usage

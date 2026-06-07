@@ -1,5 +1,5 @@
 {
-  "name": "md2slides",
+  "name": "md2slide",
   "version": "0.1.0",
   "description": "A lightweight CLI tool to transform Markdown files into beautiful presentation slides.",
   "type": "module",
@@ -32,11 +32,11 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/subrahmanya01/md2slides.git"
+    "url": "https://github.com/subrahmanya01/md2slide.git"
   },
-  "homepage": "https://github.com/subrahmanya01/md2slides#readme",
+  "homepage": "https://github.com/subrahmanya01/md2slide#readme",
   "bugs": {
-    "url": "https://github.com/subrahmanya01/md2slides/issues"
+    "url": "https://github.com/subrahmanya01/md2slide/issues"
   },
   "engines": {
     "node": ">=18"
