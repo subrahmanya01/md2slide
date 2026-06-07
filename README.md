@@ -1,8 +1,23 @@
-# md2slide
+<h1 align="center">
+  <img src="./docs/images/icon.jpg" alt="md2slides" width="27" height="27" />
+  md2slides
+</h1>
+
+<p align="center">
+  Transform Markdown into beautiful presentation slides.
+</p>
+
 
 `md2slide` is a lightweight CLI tool that transforms Markdown files into beautiful presentation slides.
 
 Write your content in Markdown and instantly preview it as an interactive slide deck in the browser.
+
+## Demo
+
+<video autoplay muted loop playsinline>
+  <source src="./docs/demo/demo.mp4" type="video/mp4">
+</video>
+
 
 ## Features
 
