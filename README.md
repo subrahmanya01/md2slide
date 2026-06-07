@@ -14,10 +14,7 @@ Write your content in Markdown and instantly preview it as an interactive slide 
 
 ## Demo
 
-<video autoplay muted loop playsinline>
-  <source src="./docs/demo/demo.mp4" type="video/mp4">
-</video>
-
+![Demo](docs/demo/demo.gif)
 
 ## Features
 
