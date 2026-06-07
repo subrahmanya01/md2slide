@@ -1,22 +1,50 @@
 {
   "name": "md2slides",
-  "version": "1.0.0",
-  "description": "",
+  "version": "0.1.0",
+  "description": "A lightweight CLI tool to transform Markdown files into beautiful presentation slides.",
+  "type": "module",
   "bin": {
     "md2slides": "./md2slides.js"
   },
+  "main": "md2slides.js",
+  "files": [
+    "public",
+    "md2slides.js",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node md2slides.js",
+    "dev": "node md2slides.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "module",
+  "keywords": [
+    "markdown",
+    "slides",
+    "presentation",
+    "ppt",
+    "cli",
+    "markdown-slides",
+    "presentation-tool",
+    "slides-generator",
+    "developer-tools"
+  ],
+  "author": "Subrahmanya Bhat",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/subrahmanya01/md2slides.git"
+  },
+  "homepage": "https://github.com/subrahmanya01/md2slides#readme",
+  "bugs": {
+    "url": "https://github.com/subrahmanya01/md2slides/issues"
+  },
+  "engines": {
+    "node": ">=18"
+  },
   "dependencies": {
     "commander": "^15.0.0",
     "express": "^5.2.1",
     "figlet": "^1.11.0",
-    "open": "^11.0.0",
-    "path": "^0.12.7"
+    "open": "^11.0.0"
   }
 }
